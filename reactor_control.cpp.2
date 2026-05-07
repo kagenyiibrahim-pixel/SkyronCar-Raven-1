@@ -1,0 +1,31 @@
+/* * SkyronCar Raven-1: Power Reactor Control Logic
+ * Hardware: Axial Flux Motor / Dynamo Coupling
+ * Developed by: Kagenyi Ibrahim, Founder & CEO
+ */
+
+#include <iostream>
+
+class FeedbackController {
+private:
+    float currentVoltage;
+    const float safetyThreshold = 850.0; // ASIL-D Safety Limit
+
+public:
+    FeedbackController(float initialV) : currentVoltage(initialV) {}
+
+    void regulateLoop(float incomingCharge) {
+        if (currentVoltage + incomingCharge > safetyThreshold) {
+            std::cout << "Safety Alert: High Voltage Surge. Engaging Mitigation Protocol." << std::endl;
+            currentVoltage = safetyThreshold; // Cap voltage
+        } else {
+            currentVoltage += incomingCharge;
+            std::cout << "Reactor Status: Stable. System Voltage: " << currentVoltage << "V" << std::endl;
+        }
+    }
+};
+
+int main() {
+    FeedbackController raven1Reactor(795.0); // Starting at 795V
+    raven1Reactor.regulateLoop(12.5);        // Simulating dynamo input
+    return 0;
+}
