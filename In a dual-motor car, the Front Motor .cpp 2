@@ -1,0 +1,66 @@
+/* * Aura-OS: Dual-Motor Regen Blending & Braking Strategy
+ * Lead Architect: Kagenyi Ibrahim
+ */
+
+#include <iostream>
+#include <algorithm>
+
+class AuraBrakeController {
+private:
+    float maxRegenKW = 150.0;     // Max recharge capacity of the 800V LFP
+    float batterySOC = 0.85;      // 85% - Regen is limited if battery is full
+    float frictionThreshold = 0.7; // Beyond 70% pedal, use mechanical brakes
+
+public:
+    struct RegenOutput {
+        float frontRegenTorque;
+        float rearRegenTorque;
+        float hydraulicPressure; // 0.0 to 1.0 (Mechanical brakes)
+    };
+
+    RegenOutput calculateBraking(float brakePedalInput) {
+        RegenOutput output = {0.0, 0.0, 0.0};
+
+        // 1. Safety Check: If battery is >95%, disable regen to prevent overcharge
+        if (batterySOC > 0.95) {
+            output.hydraulicPressure = brakePedalInput;
+            return output;
+        }
+
+        // 2. Regen Distribution (Weight Shift Logic)
+        // We prioritize Front Regen (65%) because of forward weight transfer
+        float totalRegenRequest = std::min(brakePedalInput, 1.0f);
+        
+        output.frontRegenTorque = totalRegenRequest * 0.65;
+        output.rearRegenTorque = totalRegenRequest * 0.35;
+
+        // 3. Blending: If driver slams the brakes (>70%), add hydraulic pressure
+        if (brakePedalInput > frictionThreshold) {
+            output.hydraulicPressure = (brakePedalInput - frictionThreshold) / (1.0 - frictionThreshold);
+        }
+
+        return output;
+    }
+
+    void logBrakeTelemetry(float input) {
+        RegenOutput res = calculateBraking(input);
+        std::cout << "--- Raven-1 Braking Report ---" << std::endl;
+        std::cout << "Pedal Input:   " << (input * 100) << "%" << std::endl;
+        std::cout << "Front Regen:   " << (res.frontRegenTorque * 100) << "% (Primary Recovery)" << std::endl;
+        std::cout << "Rear Regen:    " << (res.rearRegenTorque * 100) << "% (Stability Recovery)" << std::endl;
+        std::cout << "Friction Brake: " << (res.hydraulicPressure * 100) << "%" << std::endl;
+    }
+};
+
+int main() {
+    AuraBrakeController raven1_brakes;
+
+    // Example 1: Normal Stop (Light pressure, 30%)
+    std::cout << "Scenario: Soft Stop approaching traffic lights" << std::endl;
+    raven1_brakes.logBrakeTelemetry(0.3);
+    
+    std::cout << "\nScenario: Emergency Stop (Heavy pressure, 90%)" << std::endl;
+    raven1_brakes.logBrakeTelemetry(0.9);
+
+    return 0;
+}
