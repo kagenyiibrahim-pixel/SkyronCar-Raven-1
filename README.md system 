@@ -1,0 +1,18 @@
+ Raven-1: The Four Core Systems
+​The Raven-1 is built on a Quad-Architecture that balances extreme performance with unprecedented energy autonomy.
+​System 1: The Kinetic Power Reactor (Primary Loop)
+​Function: Energy Reclamation & Feedback.
+​Hardware: High-efficiency Dynamo coupled with a Secondary Feedback Inverter.
+​Logic: While the car is in motion, System 1 harvests excess kinetic energy from the drivetrain and feeds it back into the 800V LFP Substrate. This creates a continuous power loop, significantly reducing the "net drain" during cruising.
+​System 2: Dual-Motor AWD Propulsion
+​Function: Traction & Performance.
+​Hardware: Twin Axial Flux Motors (Front & Rear).
+​Logic: Utilizing Aura-OS Torque Vectoring, this system manages independent power delivery to all four wheels. It provides a 45/55 torque split for Launch Control while maintaining a rear-bias for high-speed efficiency.
+​System 3: Aura-OS Intelligent Kernel (The AI)
+​Function: System Management & Autonomy.
+​Hardware: Automotive-grade Edge Computing SoC.
+​Logic: The "Brain" of the Raven-1. It manages the Safety Shield (AEB), monitors battery health via a Digital Twin, and optimizes energy flow between Systems 1 and 2 in real-time based on road conditions.
+​System 4: Thermal & Structural Integrity
+​Function: Safety & Climate Control.
+​Hardware: Active Liquid Cooling Loop & Carbon-Reinforced Chassis.
+​Logic: This system ensures the high-density LFP battery pack remains in the optimal temperature "Goldilocks Zone" during 800V rapid discharge. It also manages the cabin environment using the "Mahogany Sanctuary" design principles for driver comfort.
