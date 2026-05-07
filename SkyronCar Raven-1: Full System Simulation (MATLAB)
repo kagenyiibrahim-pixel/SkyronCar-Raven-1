@@ -1,0 +1,94 @@
+%% Raven-1 Kinetic Independence Simulation
+% Architect: Kagenyi Ibrahim
+% Purpose: Simulate Motor-Dynamo Feedback Loop vs. Chinese EV Competitors
+
+clear all; close all; clc;
+
+%% 1. SYSTEM PARAMETERS
+total_time = 100;      % Seconds
+dt = 0.01;             % Time step
+t = 0:dt:total_time;
+
+% Vehicle Specs (Targeting Lightweight vs. BYD/Xiaomi)
+mass = 1750;           % kg (Structural chassis advantage)
+Cd = 0.19;             % Drag Coefficient (Aura-OS Optimized)
+A = 2.2;               % Frontal Area (m^2)
+rho = 1.225;           % Air Density (kg/m^3)
+r_wheel = 0.35;        % Wheel Radius (m)
+
+% Energy Reactor Specs
+bus_voltage = 800;     % Initial Reactor Voltage (V)
+reactor_cap = 50;      % Buffer Capacity (Ah)
+soc = 1.0;             % Initial State of Charge (100%)
+
+% Dual Axial Flux Motor Specs
+max_torque_front = 300; % Nm
+max_torque_rear = 500;  % Nm (Power bias for acceleration)
+efficiency_inv = 0.98;  % SiC Inverter Efficiency (98%)
+
+%% 2. INITIALIZE ARRAYS
+velocity = zeros(size(t));
+distance = zeros(size(t));
+reactor_v = zeros(size(t));
+current_draw = zeros(size(t));
+
+%% 3. THE SIMULATION LOOP
+for i = 2:length(t)
+    % A. AURA-OS INPUT (Driver Logic)
+    % Scenario: 0-100 Full Sprint then Cruising
+    if t(i) < 5
+        throttle = 1.0; % Full Launch
+    else
+        throttle = 0.4; % Sustain Speed
+    end
+    
+    % B. AURA-OS TORQUE VECTORING & REACTOR FEEDBACK
+    % logic: Rear motor pushes, Front motor (coupled to dynamo) harvests
+    front_torque_req = throttle * max_torque_front;
+    rear_torque_req = throttle * max_torque_rear;
+    
+    % REAC-FEEDBACK: Harvest kinetic energy back into the bus
+    % Formula: P_harvest = Torque * AngularVelocity * Regen_Efficiency
+    harvest_efficiency = 0.22; % Target reclamation from motor-dynamo loop
+    omega_wheel = velocity(i-1) / r_wheel;
+    p_reclaimed = (front_torque_req * omega_wheel) * harvest_efficiency;
+    
+    % C. PHYSICS ENGINE (Forces)
+    F_drive = (front_torque_req + rear_torque_req) / r_wheel;
+    F_drag = 0.5 * rho * Cd * A * velocity(i-1)^2;
+    F_rolling = 0.015 * mass * 9.81;
+    
+    total_force = F_drive - F_drag - F_rolling;
+    acceleration = total_force / mass;
+    
+    % Integration (Euler Method)
+    velocity(i) = velocity(i-1) + acceleration * dt;
+    if velocity(i) < 0, velocity(i) = 0; end % Prevent reversing
+    distance(i) = distance(i-1) + velocity(i) * dt;
+    
+    % D. ENERGY REACTOR DYNAMICS
+    p_out = (F_drive * velocity(i)) / efficiency_inv;
+    net_power = p_out - p_reclaimed; % The "Raven-1 Advantage"
+    
+    % Update State of Charge
+    % Current = Power / Voltage
+    current = net_power / bus_voltage;
+    soc = soc - (current * dt) / (reactor_cap * 3600);
+    
+    % Data Logging
+    reactor_v(i) = bus_voltage;
+    current_draw(i) = current;
+end
+
+%% 4. RESULTS & VISUALIZATION
+figure('Name', 'SkyronCar Raven-1 Performance vs. Competition');
+
+subplot(2,1,1);
+plot(t, velocity * 3.6, 'LineWidth', 2, 'Color', 'b'); % Convert to km/h
+grid on; title('Aura-OS Velocity Profile');
+ylabel('Speed (km/h)'); xlabel('Time (s)');
+
+subplot(2,1,2);
+plot(t, soc * 100, 'LineWidth', 2, 'Color', 'g');
+grid on; title('Reactor Energy Depletion (Feedback Loop Active)');
+ylabel('State of Charge (%)'); xlabel('Time (s)');
